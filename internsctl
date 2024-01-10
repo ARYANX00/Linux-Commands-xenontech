@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# internsctl - Custom Linux Command v0.1.0
+
+show_help() {
+    echo "Usage: internsctl [command] [options] <file-name>"
+    echo "Commands:"
+    echo "  cpu getinfo             Display CPU information."
+    echo "  memory getinfo          Display memory information."
+    echo "  user create <username>  Create a new user."
+    echo "  user list               List all regular users."
+    echo "  user list --sudo-only   List users with sudo permissions."
+    echo "  file getinfo <file-name> Display file information."
+    echo "Options for file getinfo:"
+    echo "  --size, -s              Print file size."
+    echo "  --permissions, -p       Print file permissions."
+    echo "  --owner, -o             Print file owner."
+    echo "  --last-modified, -m     Print last modified time."
+    echo "Options:"
+    echo "  --help                  Display this help message."
+    echo "  --version               Display the version of internsctl."
+}
+
+show_version() {
+    echo "internsctl v0.1.0"
+}
+
+get_file_info() {
+    if [ ! -e "$3" ]; then
+        echo "Error: File '$3' not found."
+        exit 1
+    fi
+
+    file="$3"
+
+    size_option=false
+    permissions_option=false
+    owner_option=false
+    last_modified_option=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -s | --size)
+                size_option=true
+                ;;
+            -p | --permissions)
+                permissions_option=true
+                ;;
+            -o | --owner)
+                owner_option=true
+                ;;
+            -m | --last-modified)
+                last_modified_option=true
+                ;;
+            *)
+                echo "Unknown option: $1"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+
+    if [ "$size_option" = true ]; then
+        stat -c %s "$file"
+    elif [ "$permissions_option" = true ]; then
+        stat -c %A "$file"
+    elif [ "$owner_option" = true ]; then
+        stat -c %U "$file"
+    elif [ "$last_modified_option" = true ]; then
+        stat -c %y "$file"
+    else
+        # Default output format
+        stat --format="File: %n\nAccess: %A\nSize(B): %s\nOwner: %U\nModify: %y" "$file"
+    fi
+}
+
+#!/bin/bash
+
+case "$1" in
+    file)
+        case "$2" in
+            getinfo)
+                if [ ! -e "$4" ]; then
+                    echo "Error: File '$4' not found."
+                    exit 1
+                fi
+
+                file="$4"
+
+                case "$3" in
+                    --size)
+                        stat -c %s "$file"
+                        ;;
+                    --permissions)
+                        stat -c %A "$file"
+                        ;;
+                    --owner)
+                        stat -c %U "$file"
+                        ;;
+                    --last-modified)
+                        stat -c %y "$file"
+                        ;;
+                    *)
+                        echo "Invalid option. Use 'internsctl --help' for usage."
+                        exit 1
+                        ;;
+                esac
+                ;;
+            *)
+                echo "Invalid command. Use 'internsctl --help' for usage."
+                exit 1
+                ;;
+        esac
+        ;;
+    --help)
+        echo "Usage: internsctl [command] [options] <file-name>"
+        echo "Commands:"
+        echo "  file getinfo <file-name> Display file information."
+        echo "Options for file getinfo:"
+        echo "  --size                Print file size."
+        echo "  --permissions         Print file permissions."
+        echo "  --owner               Print file owner."
+        echo "  --last-modified       Print last modified time."
+        echo "Options:"
+        echo "  --help                Display this help message."
+        echo "  --version             Display the version of internsctl."
+        ;;
+    --version)
+        echo "internsctl v0.1.0"
+        ;;
+    *)
+        echo "Invalid option or command. Use 'internsctl --help' for usage."
+        exit 1
+        ;;
+esac
+
+exit 0
+
+
+
